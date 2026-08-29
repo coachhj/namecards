@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>온라인 명함 만들기</title>
+<title>온라인 명함</title>
+<meta property="og:title" content="온라인 명함">
+<meta property="og:type" content="website">
+<meta name="twitter:title" content="온라인 명함">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -124,31 +127,35 @@
     display:none; text-align:center; font-size:11.5px;
     color:var(--ink-soft); line-height:1.6; margin-top:10px; padding:0 6px;
   }
-  .gallery-item{
-    margin-top:30px; padding:26px 26px 4px;
-    border-top:1px solid var(--line); text-align:center;
+  .gallery{
+    margin-top:30px; padding:24px 26px 0;
+    border-top:1px solid var(--line);
+    display:flex; flex-direction:column; gap:20px;
   }
-  .gallery-item + .gallery-item{ margin-top:6px; border-top:none; padding-top:8px; }
-  .gallery-label{ font-size:11px; font-weight:600; color:var(--c-bright); margin-bottom:14px; }
-  .gallery-item img{
-    width:100%; max-width:280px; height:auto; border-radius:10px;
-    box-shadow:0 14px 30px -14px rgba(11,46,122,0.35);
+  .gallery-item{ display:flex; gap:16px; align-items:flex-start; text-align:left; }
+  .gallery-thumb{ width:92px; flex-shrink:0; }
+  .gallery-thumb img{
+    width:100%; height:auto; display:block; border-radius:8px;
+    box-shadow:0 10px 22px -12px rgba(11,46,122,0.4);
   }
-  .gallery-desc{
-    font-size:12.5px; color:var(--ink-soft); line-height:1.7;
-    margin:14px auto 0; max-width:280px;
+  .gallery-body{ flex:1; min-width:0; padding-top:2px; }
+  .gallery-label{
+    font-size:11px; font-weight:600; letter-spacing:0.08em;
+    color:var(--c-bright); margin-bottom:6px;
   }
+  .gallery-desc{ font-size:12.5px; color:var(--ink-soft); line-height:1.7; }
+  .gallery-thumb .img-fallback{ padding:16px 6px; font-size:10px; text-align:center; }
+
   .img-fallback{
     border:1.4px dashed var(--line); border-radius:12px;
     padding:22px 16px; margin:0 auto; max-width:280px;
     font-size:11.5px; color:var(--ink-soft); line-height:1.6;
   }
 
-  .made-with{
+  .footer-note{
     text-align:center; font-size:11px; color:var(--ink-soft);
-    padding:26px 20px 0; opacity:0.7;
+    line-height:1.7; padding:26px 26px 0;
   }
-  .made-with a{ border-bottom:1px solid var(--line); }
 
   /* ================= 명함 페이지 ================= */
   .card-page{ padding:32px 14px; }
@@ -308,6 +315,11 @@
     padding:14px 16px; font-size:12px; color:var(--c-deep);
     line-height:1.7; margin-top:14px;
   }
+  .notice-soft{
+    background:#fff; border:1.4px solid var(--line); color:var(--ink-soft);
+  }
+  .notice-soft a{ color:var(--c-main); font-weight:700; border-bottom:1px solid var(--line); }
+  .notice-soft a:hover{ border-bottom-color:var(--c-bright); }
 </style>
 </head>
 <body>
@@ -367,6 +379,11 @@
         <div class="field">
           <label for="f-g">한 줄 소개 <span class="sub">선택</span></label>
           <input id="f-g" data-k="g" placeholder="개인과 조직의 성장과 성공을 지원합니다.">
+        </div>
+
+        <div class="field">
+          <label for="f-f">맨 아래 표기 <span class="sub">선택 · 상호, 사업자등록번호 등</span></label>
+          <input id="f-f" data-k="f" placeholder="㈜코칭경영원 · 사업자등록번호 000-00-00000">
         </div>
       </section>
 
@@ -460,6 +477,11 @@
 
         <div class="notice">
           이 명함은 서버에 저장되지 않습니다. 모든 내용이 링크 안에 담겨 있어요. 링크를 잃어버리면 다시 만들어야 하니 잘 보관하세요.
+        </div>
+
+        <div class="notice notice-soft">
+          생성된 링크가 매우 깁니다. <a href="https://zrr.kr/" target="_blank" rel="noopener">https://zrr.kr/</a> 나 <a href="https://url.kr/" target="_blank" rel="noopener">https://url.kr/</a> 등에서 단축하여 사용하시면 좋습니다.
+          <br>단축한 뒤에는 그 주소를 한 번 열어서 명함이 제대로 뜨는지 확인해 주세요.
         </div>
       </div>
     </div>
@@ -642,19 +664,24 @@ function renderCard(root, d, isPreview){
   if (/KAKAOTALK/i.test(navigator.userAgent)) hint.style.display = 'block';
 
   // 하단 이미지
-  (d.i || []).forEach(it => {
-    if (!it) return;
-    const src = safeImg(it[1]);
-    if (!src) return;
-    const sec = add(phone, 'div', 'gallery-item');
-    if (it[0]) add(sec, 'div', 'gallery-label mono', it[0]);
-    const holder = add(sec, 'div');
-    const img = add(holder, 'img');
-    img.referrerPolicy = 'no-referrer';
-    img.src = src; img.alt = it[0] || '';
-    img.onerror = onImgFail(holder, '이미지를 여기서는 불러오지 못했습니다');
-    if (it[2]) add(sec, 'p', 'gallery-desc', it[2]);
-  });
+  const gal = (d.i || []).filter(it => it && safeImg(it[1]));
+  if (gal.length){
+    const wrap = add(phone, 'div', 'gallery');
+    gal.forEach(it => {
+      const sec = add(wrap, 'div', 'gallery-item');
+      const thumb = add(sec, 'div', 'gallery-thumb');
+      const img = add(thumb, 'img');
+      img.referrerPolicy = 'no-referrer';
+      img.src = safeImg(it[1]); img.alt = it[0] || '';
+      img.onerror = onImgFail(thumb, '이미지 없음');
+      const body = add(sec, 'div', 'gallery-body');
+      if (it[0]) add(body, 'div', 'gallery-label mono', it[0]);
+      if (it[2]) add(body, 'p', 'gallery-desc', it[2]);
+    });
+  }
+
+  // 맨 아래 표기
+  if (d.f) add(phone, 'div', 'footer-note', d.f);
 
   root.appendChild(phone);
   return th;
@@ -730,14 +757,6 @@ async function showCard(code){
   const th = renderCard(page, d);
   document.body.style.background = th.page;
   document.title = (d.n || '명함') + (d.o ? ' | ' + d.o : '');
-
-  const foot = document.createElement('div');
-  foot.className = 'made-with';
-  const a = document.createElement('a');
-  a.href = location.pathname;
-  a.textContent = '나도 온라인 명함 만들기';
-  foot.appendChild(a);
-  page.appendChild(foot);
 }
 
 /* ================== 편집기 ================== */
