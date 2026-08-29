@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>온라인 명함 만들기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --c-deep:#0B2E7A;
+    --c-main:#0047AB;
+    --c-bright:#2F6FED;
+    --c-tint:#EAF0FD;
+    --page:#EEF1F8;
+    --ink:#14171F;
+    --ink-soft:#5B6273;
+    --line:#E6EAF3;
+    --white:#ffffff;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
+  }
+
+  body{
+    font-family:'Noto Sans KR', sans-serif;
+    color:var(--ink);
+    background:var(--page);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{ color:inherit; text-decoration:none; }
+  button{ font-family:inherit; border:none; cursor:pointer; }
+  input, select{ font-family:inherit; font-size:14px; color:var(--ink); }
+  .mono{ font-family:'IBM Plex Mono', monospace; letter-spacing:0.05em; }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{
+    outline:2px solid var(--c-bright);
+    outline-offset:2px;
+  }
+
+  /* ================= 명함 ================= */
+  .phone{
+    max-width:400px;
+    margin:0 auto;
+    background:var(--white);
+    border-radius:26px;
+    overflow:hidden;
+    box-shadow:0 40px 80px -30px rgba(11,46,122,0.35), 0 1px 2px rgba(11,46,122,0.06);
+    padding-bottom:30px;
+  }
+  .card-page .phone{ animation:rise 0.7s cubic-bezier(.2,.9,.25,1) both; }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(16px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .logo-wrap{ display:flex; justify-content:center; padding:36px 20px 20px; }
+  .logo-wrap img{ height:36px; width:auto; }
+
+  .portrait-wrap{ padding:4px 28px; display:flex; justify-content:center; }
+  .portrait-wrap img{ width:100%; max-width:196px; height:auto; display:block; border-radius:14px; }
+
+  .phone > .id-card:first-child{ margin-top:34px; }
+
+  .id-card{
+    margin:24px 22px 0;
+    background:var(--c-tint);
+    border-radius:16px;
+    padding:24px 24px 22px;
+  }
+  .name-row{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:5px; }
+  .name-row h1{ font-size:23px; font-weight:900; }
+  .name-row .title-inline{ font-size:14px; font-weight:700; color:var(--c-deep); }
+
+  .eng-name{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; color:var(--ink-soft);
+    letter-spacing:0.03em; margin-bottom:10px;
+  }
+  .creds{ font-size:12.5px; font-weight:600; color:var(--c-main); margin-bottom:10px; }
+  .org{ font-size:13.5px; font-weight:700; letter-spacing:0.12em; margin-bottom:16px; }
+
+  .cline{ display:flex; flex-wrap:wrap; gap:6px 10px; font-size:13.5px; margin-bottom:6px; align-items:baseline; }
+  .cline .k{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700; color:var(--c-bright);
+    min-width:14px; flex-shrink:0;
+  }
+  .cline .v{ font-weight:700; color:var(--ink); word-break:break-all; }
+  .cline .sep{ color:var(--ink-soft); font-weight:400; }
+
+  .address{
+    margin-top:2px; padding-top:8px;
+    border-top:1px solid var(--line);
+    font-size:12px; color:var(--ink-soft); line-height:1.55;
+  }
+  .tagline{
+    text-align:center; font-size:13px; font-weight:600;
+    color:var(--c-deep); padding:22px 26px 0;
+  }
+
+  .btn-stack{ padding:20px 22px 0; display:flex; flex-direction:column; gap:10px; }
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:15px 16px; border-radius:12px;
+    font-size:14.5px; font-weight:700; text-align:center;
+    transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    width:100%;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg, var(--c-bright), var(--c-deep));
+    color:#fff;
+    box-shadow:0 14px 26px -10px rgba(11,46,122,0.55);
+  }
+  .btn-primary:hover{ transform:translateY(-2px); }
+  .btn-outline{ border:1.4px solid var(--line); color:var(--ink); background:#fff; }
+  .btn-outline:hover{ border-color:var(--c-bright); color:var(--c-deep); transform:translateY(-2px); }
+
+  .kakao-hint{
+    display:none; text-align:center; font-size:11.5px;
+    color:var(--ink-soft); line-height:1.6; margin-top:10px; padding:0 6px;
+  }
+  .gallery-item{
+    margin-top:30px; padding:26px 26px 4px;
+    border-top:1px solid var(--line); text-align:center;
+  }
+  .gallery-item + .gallery-item{ margin-top:6px; border-top:none; padding-top:8px; }
+  .gallery-label{ font-size:11px; font-weight:600; color:var(--c-bright); margin-bottom:14px; }
+  .gallery-item img{
+    width:100%; max-width:280px; height:auto; border-radius:10px;
+    box-shadow:0 14px 30px -14px rgba(11,46,122,0.35);
+  }
+  .gallery-desc{
+    font-size:12.5px; color:var(--ink-soft); line-height:1.7;
+    margin:14px auto 0; max-width:280px;
+  }
+  .img-fallback{
+    border:1.4px dashed var(--line); border-radius:12px;
+    padding:22px 16px; margin:0 auto; max-width:280px;
+    font-size:11.5px; color:var(--ink-soft); line-height:1.6;
+  }
+
+  .made-with{
+    text-align:center; font-size:11px; color:var(--ink-soft);
+    padding:26px 20px 0; opacity:0.7;
+  }
+  .made-with a{ border-bottom:1px solid var(--line); }
+
+  /* ================= 명함 페이지 ================= */
+  .card-page{ padding:32px 14px; }
+
+  /* ================= 편집기 ================= */
+  .editor{ max-width:1120px; margin:0 auto; padding:28px 18px 80px; }
+
+  .masthead{ margin-bottom:26px; }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; font-weight:600; letter-spacing:0.14em;
+    color:var(--c-bright); margin-bottom:10px;
+  }
+  .masthead h1{ font-size:27px; font-weight:900; letter-spacing:-0.02em; margin-bottom:8px; }
+  .masthead p{ font-size:14px; color:var(--ink-soft); line-height:1.7; max-width:620px; }
+
+  .grid{ display:grid; grid-template-columns:minmax(0,1fr) 400px; gap:28px; align-items:start; }
+  @media (max-width:900px){
+    .grid{ grid-template-columns:1fr; }
+    .preview-col{ position:static !important; }
+  }
+
+  .panel{
+    background:var(--white);
+    border-radius:18px;
+    padding:24px 22px;
+    margin-bottom:16px;
+    box-shadow:0 1px 2px rgba(11,46,122,0.06), 0 18px 40px -34px rgba(11,46,122,0.4);
+  }
+  .panel > h2{
+    font-size:14px; font-weight:900; margin-bottom:4px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .panel > h2 .step{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px; color:var(--c-bright); font-weight:600;
+  }
+  .panel > .hint{ font-size:12px; color:var(--ink-soft); line-height:1.6; margin-bottom:16px; }
+
+  .field{ margin-bottom:14px; }
+  .field:last-child{ margin-bottom:0; }
+  .field label{ display:block; font-size:12px; font-weight:700; margin-bottom:6px; }
+  .field .sub{ font-weight:400; color:var(--ink-soft); margin-left:6px; }
+  .field input, .field select{
+    width:100%; padding:11px 12px;
+    border:1.4px solid var(--line); border-radius:10px;
+    background:#fff; transition:border-color 0.15s ease;
+  }
+  .field input:focus, .field select:focus{ border-color:var(--c-bright); outline-offset:0; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px){ .row2{ grid-template-columns:1fr; } }
+
+  .imgcheck{ font-size:11.5px; margin-top:6px; line-height:1.5; min-height:16px; }
+  .imgcheck.ok{ color:#1B7A4B; }
+  .imgcheck.bad{ color:#B4243F; }
+  .imgcheck.warn{ color:#9A6B12; }
+
+  .rows{ display:flex; flex-direction:column; gap:10px; }
+  .rowitem{
+    border:1.4px solid var(--line); border-radius:12px;
+    padding:12px; background:#FCFDFF;
+    display:grid; gap:8px;
+  }
+  .rowitem .line{ display:grid; gap:8px; }
+  .rowitem .foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .rowitem .foot label{ font-size:11.5px; font-weight:600; color:var(--ink-soft); display:flex; align-items:center; gap:6px; }
+  .contact-line{ grid-template-columns:56px 1fr 96px; }
+  .btn-line{ grid-template-columns:56px 1fr; }
+  .img-line{ grid-template-columns:96px 1fr; }
+  @media (max-width:520px){
+    .contact-line, .btn-line, .img-line{ grid-template-columns:1fr; }
+  }
+  .rowitem input, .rowitem select{ padding:9px 10px; font-size:13px; border:1.4px solid var(--line); border-radius:8px; width:100%; }
+
+  .mini{
+    font-size:11.5px; font-weight:700; color:var(--ink-soft);
+    background:none; padding:4px 6px; border-radius:6px;
+  }
+  .mini:hover{ color:#B4243F; background:#FDF0F3; }
+
+  .add-btn{
+    margin-top:10px; width:100%;
+    padding:11px; border-radius:10px;
+    border:1.4px dashed var(--line); background:#fff;
+    font-size:12.5px; font-weight:700; color:var(--c-main);
+    transition:border-color 0.15s ease, background 0.15s ease;
+  }
+  .add-btn:hover{ border-color:var(--c-bright); background:var(--c-tint); }
+
+  .swatches{ display:flex; gap:10px; flex-wrap:wrap; }
+  .swatch{
+    width:52px; padding:0; background:none;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .swatch .dot{
+    width:34px; height:34px; border-radius:50%;
+    border:2px solid transparent; box-shadow:0 0 0 1.4px var(--line);
+    transition:box-shadow 0.15s ease;
+  }
+  .swatch[aria-pressed="true"] .dot{ box-shadow:0 0 0 2.4px var(--ink); }
+  .swatch span{ font-size:10.5px; color:var(--ink-soft); font-weight:600; }
+
+  .preview-col{ position:sticky; top:22px; }
+  .preview-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:12px; padding:0 4px;
+  }
+  .preview-head strong{ font-size:12px; font-weight:900; }
+  .preview-head span{ font-size:11px; color:var(--ink-soft); }
+  .preview-frame{ background:var(--page); border-radius:22px; padding:18px 10px; }
+
+  .result{ margin-top:16px; }
+  .cta{
+    width:100%; padding:16px; border-radius:12px;
+    font-size:15px; font-weight:900; color:#fff;
+    background:linear-gradient(135deg, var(--c-bright), var(--c-deep));
+    box-shadow:0 14px 26px -12px rgba(11,46,122,0.6);
+    transition:transform 0.18s ease;
+  }
+  .cta:hover{ transform:translateY(-2px); }
+  .cta:disabled{ opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  .linkbox{ display:none; margin-top:16px; }
+  .linkbox.show{ display:block; }
+  .linkfield{
+    display:flex; gap:8px; align-items:stretch;
+    border:1.4px solid var(--line); border-radius:10px;
+    padding:8px 8px 8px 12px; background:#FCFDFF;
+  }
+  .linkfield input{
+    flex:1; border:none; background:none; font-size:12px;
+    font-family:'IBM Plex Mono', monospace; min-width:0;
+  }
+  .linkfield input:focus{ outline:none; }
+  .copy-btn{
+    padding:8px 14px; border-radius:8px;
+    background:var(--c-deep); color:#fff;
+    font-size:12px; font-weight:700; white-space:nowrap;
+  }
+  .link-actions{ display:flex; gap:8px; margin-top:10px; }
+  .link-actions a{
+    flex:1; text-align:center; padding:10px;
+    border:1.4px solid var(--line); border-radius:9px;
+    font-size:12.5px; font-weight:700; background:#fff;
+  }
+  .link-actions a:hover{ border-color:var(--c-bright); color:var(--c-deep); }
+
+  .meter{ font-size:11.5px; color:var(--ink-soft); margin-top:10px; line-height:1.6; }
+  .meter b{ font-family:'IBM Plex Mono', monospace; color:var(--ink); }
+  .meter.over b{ color:#B4243F; }
+
+  #qr{ display:flex; justify-content:center; margin-top:16px; }
+  #qr img, #qr canvas{ border-radius:8px; }
+
+  .notice{
+    background:var(--c-tint); border-radius:12px;
+    padding:14px 16px; font-size:12px; color:var(--c-deep);
+    line-height:1.7; margin-top:14px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 명함 보기 ============ -->
+<div id="cardPage" class="card-page" hidden></div>
+
+<!-- ============ 편집기 ============ -->
+<div id="editorPage" class="editor" hidden>
+
+  <div class="masthead">
+    <div class="eyebrow mono">ONLINE NAME CARD</div>
+    <h1>온라인 명함 만들기</h1>
+    <p>아래를 채우면 명함 링크가 만들어집니다. 카카오톡으로 보내면 상대방이 바로 열어보고 연락처를 저장할 수 있어요. 사진과 로고는 이미 인터넷에 올라가 있는 이미지 주소를 넣어주세요.</p>
+  </div>
+
+  <div class="grid">
+    <div>
+
+      <!-- 1. 기본 -->
+      <section class="panel">
+        <h2><span class="step mono">01</span> 기본 정보</h2>
+        <p class="hint">이름만 있어도 명함이 만들어집니다. 비워둔 줄은 명함에 아예 나타나지 않아요.</p>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-n">이름</label>
+            <input id="f-n" data-k="n" placeholder="이한주">
+          </div>
+          <div class="field">
+            <label for="f-t">직함</label>
+            <input id="f-t" data-k="t" placeholder="파트너 코치">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="f-e">영문 이름 <span class="sub">선택</span></label>
+            <input id="f-e" data-k="e" placeholder="Hannjoo Honest Lee">
+          </div>
+          <div class="field">
+            <label for="f-o">회사·소속 <span class="sub">선택</span></label>
+            <input id="f-o" data-k="o" placeholder="㈜코칭경영원">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-c">자격·전문 분야 <span class="sub">선택 · 한 줄로</span></label>
+          <input id="f-c" data-k="c" placeholder="Ph.D. / PCC / KSC / 갤럽강점코치">
+        </div>
+
+        <div class="field">
+          <label for="f-a">주소 <span class="sub">선택</span></label>
+          <input id="f-a" data-k="a" placeholder="서울특별시 서초구 서초중앙로 24길 19 나라빌딩 2F">
+        </div>
+
+        <div class="field">
+          <label for="f-g">한 줄 소개 <span class="sub">선택</span></label>
+          <input id="f-g" data-k="g" placeholder="개인과 조직의 성장과 성공을 지원합니다.">
+        </div>
+      </section>
+
+      <!-- 2. 이미지 -->
+      <section class="panel">
+        <h2><span class="step mono">02</span> 사진과 로고</h2>
+        <p class="hint">인터넷에 올라가 있는 이미지 주소를 붙여넣으세요. https 로 시작해야 합니다. 주소를 넣으면 불러와지는지 확인해 드리는데, 일부 사이트는 확인 단계에서만 막히고 실제 명함에서는 잘 나오기도 합니다. 안 된다고 나와도 링크는 그대로 만들 수 있어요.</p>
+
+        <div class="field">
+          <label for="f-p">인물 사진 주소</label>
+          <input id="f-p" data-k="p" data-img="1" placeholder="https://example.com/photo.jpg">
+          <div class="imgcheck" id="chk-f-p"></div>
+        </div>
+
+        <div class="field">
+          <label for="f-l">로고 주소 <span class="sub">선택</span></label>
+          <input id="f-l" data-k="l" data-img="1" placeholder="https://example.com/logo.png">
+          <div class="imgcheck" id="chk-f-l"></div>
+        </div>
+      </section>
+
+      <!-- 3. 연락처 -->
+      <section class="panel">
+        <h2><span class="step mono">03</span> 연락처</h2>
+        <p class="hint">앞의 글자는 명함에 그대로 표시됩니다. M은 휴대폰, T는 사무실, E는 이메일, H는 홈페이지, F는 팩스처럼 쓰시면 됩니다. 종류를 정해두면 눌렀을 때 바로 전화가 걸리거나 메일 창이 열립니다.</p>
+        <div class="rows" id="rows-contact"></div>
+        <button type="button" class="add-btn" data-add="contact">+ 연락처 줄 추가</button>
+      </section>
+
+      <!-- 4. 버튼 -->
+      <section class="panel">
+        <h2><span class="step mono">04</span> 링크 버튼</h2>
+        <p class="hint">블로그, 유튜브, 링크드인, 예약 페이지처럼 보여주고 싶은 곳을 원하는 만큼 넣으세요. ‘강조’를 켜면 파란 버튼이 됩니다.</p>
+        <div class="rows" id="rows-btn"></div>
+        <button type="button" class="add-btn" data-add="btn">+ 버튼 추가</button>
+      </section>
+
+      <!-- 5. 하단 이미지 -->
+      <section class="panel">
+        <h2><span class="step mono">05</span> 아래에 보여줄 이미지</h2>
+        <p class="hint">저서 표지, 수료증, 팀 사진 등을 명함 맨 아래에 붙입니다. 작은 제목, 이미지 주소, 설명을 넣으면 이미지 아래에 설명이 따라붙습니다. 설명은 비워도 됩니다.</p>
+        <div class="rows" id="rows-img"></div>
+        <button type="button" class="add-btn" data-add="img">+ 이미지 추가</button>
+      </section>
+
+      <!-- 6. 색 -->
+      <section class="panel">
+        <h2><span class="step mono">06</span> 강조색</h2>
+        <p class="hint">이름, 자격, 버튼에 쓰이는 색입니다.</p>
+        <div class="swatches" id="swatches"></div>
+      </section>
+
+      <!-- 불러오기 -->
+      <section class="panel">
+        <h2>이미 만든 명함 고치기</h2>
+        <p class="hint">전에 만든 명함 링크를 붙여넣으면 내용이 그대로 채워집니다. 고친 뒤에는 새 링크가 나오니, 그 링크를 다시 나눠주세요.</p>
+        <div class="field">
+          <input id="f-load" placeholder="https://... 명함 링크 붙여넣기">
+        </div>
+        <button type="button" class="add-btn" id="loadBtn">불러오기</button>
+        <div class="imgcheck" id="loadMsg"></div>
+      </section>
+
+    </div>
+
+    <!-- 미리보기 -->
+    <div class="preview-col">
+      <div class="preview-head">
+        <strong>미리보기</strong>
+        <span>실제 화면 그대로</span>
+      </div>
+      <div class="preview-frame">
+        <div id="preview"></div>
+      </div>
+
+      <div class="result">
+        <button type="button" class="cta" id="makeBtn" disabled>명함 링크 만들기</button>
+
+        <div class="linkbox" id="linkbox">
+          <div class="linkfield">
+            <input id="linkOut" readonly>
+            <button type="button" class="copy-btn" id="copyBtn">복사</button>
+          </div>
+          <div class="link-actions">
+            <a id="openLink" target="_blank" rel="noopener">새 창에서 열기</a>
+            <a id="shareLink" href="#">공유하기</a>
+          </div>
+          <div class="meter" id="meter"></div>
+          <div id="qr"></div>
+        </div>
+
+        <div class="notice">
+          이 명함은 서버에 저장되지 않습니다. 모든 내용이 링크 안에 담겨 있어요. 링크를 잃어버리면 다시 만들어야 하니 잘 보관하세요.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@gh-pages/qrcode.min.js"></script>
+<script>
+/* ================== 테마 ================== */
+const THEMES = [
+  { name:'코발트', deep:'#0B2E7A', main:'#0047AB', bright:'#2F6FED', tint:'#EAF0FD', page:'#EEF1F8' },
+  { name:'딥그린', deep:'#0B3A2C', main:'#12694E', bright:'#1F9B72', tint:'#E6F4EE', page:'#EDF3F0' },
+  { name:'버건디', deep:'#4A1224', main:'#8C1D3F', bright:'#C03A63', tint:'#FAEBF0', page:'#F6EFF1' },
+  { name:'차콜',   deep:'#171A21', main:'#333A4B', bright:'#5C6479', tint:'#EEF0F5', page:'#F0F1F4' },
+  { name:'브론즈', deep:'#4A3009', main:'#8A6414', bright:'#BF922C', tint:'#FAF2E0', page:'#F5F1E9' }
+];
+
+/* ================== 인코딩 ================== */
+function bytesToB64u(bytes){
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64uToBytes(str){
+  let s = str.replace(/-/g,'+').replace(/_/g,'/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+async function encodeData(obj){
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  if (typeof CompressionStream === 'function'){
+    try{
+      const cs = new CompressionStream('deflate-raw');
+      const w = cs.writable.getWriter();
+      w.write(bytes); w.close();
+      const buf = await new Response(cs.readable).arrayBuffer();
+      return '1' + bytesToB64u(new Uint8Array(buf));
+    }catch(e){ /* 아래로 */ }
+  }
+  return '0' + bytesToB64u(bytes);
+}
+async function decodeData(code){
+  const flag = code[0];
+  const bytes = b64uToBytes(code.slice(1));
+  if (flag === '1'){
+    const ds = new DecompressionStream('deflate-raw');
+    const w = ds.writable.getWriter();
+    w.write(bytes); w.close();
+    const buf = await new Response(ds.readable).arrayBuffer();
+    return JSON.parse(new TextDecoder().decode(buf));
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+/* ================== 안전한 주소 ================== */
+function safeUrl(raw, kind){
+  const v = (raw || '').trim();
+  if (!v) return '';
+  if (kind === 'tel')   return 'tel:' + v.replace(/[^0-9+]/g,'');
+  if (kind === 'email') return 'mailto:' + v;
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^(javascript|data|vbscript):/i.test(v)) return '';
+  return 'https://' + v;
+}
+function safeImg(raw){
+  const v = (raw || '').trim();
+  if (!v) return '';
+  return /^https?:\/\//i.test(v) ? v : '';
+}
+
+/* ================== 명함 렌더 ================== */
+function renderCard(root, d, isPreview){
+  root.innerHTML = '';
+  const th = THEMES[d.k || 0] || THEMES[0];
+
+  const phone = document.createElement('div');
+  phone.className = 'phone';
+  phone.style.setProperty('--c-deep', th.deep);
+  phone.style.setProperty('--c-main', th.main);
+  phone.style.setProperty('--c-bright', th.bright);
+  phone.style.setProperty('--c-tint', th.tint);
+
+  const add = (parent, tag, cls, text) => {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text != null) el.textContent = text;
+    parent.appendChild(el);
+    return el;
+  };
+
+  // 이미지가 안 열릴 때: 미리보기에서는 자리를 남겨 알려주고, 실제 명함에서는 조용히 접는다
+  const onImgFail = (wrap, note) => () => {
+    if (!isPreview){ wrap.remove(); return; }
+    wrap.innerHTML = '';
+    const box = document.createElement('div');
+    box.className = 'img-fallback';
+    box.textContent = note;
+    wrap.appendChild(box);
+  };
+
+  // 로고
+  const logo = safeImg(d.l);
+  if (logo){
+    const w = add(phone, 'div', 'logo-wrap');
+    const img = add(w, 'img');
+    img.referrerPolicy = 'no-referrer';
+    img.src = logo; img.alt = d.o || '';
+    img.onerror = onImgFail(w, '로고를 여기서는 불러오지 못했습니다');
+  }
+
+  // 사진
+  const portrait = safeImg(d.p);
+  if (portrait){
+    const w = add(phone, 'div', 'portrait-wrap');
+    const img = add(w, 'img');
+    img.referrerPolicy = 'no-referrer';
+    img.src = portrait; img.alt = d.n || '';
+    img.onerror = onImgFail(w, '사진을 여기서는 불러오지 못했습니다');
+  }
+
+  // 이름 카드
+  const card = add(phone, 'div', 'id-card');
+  const nameRow = add(card, 'div', 'name-row');
+  add(nameRow, 'h1', null, d.n || '이름');
+  if (d.t) add(nameRow, 'span', 'title-inline', d.t);
+  if (d.e) add(card, 'div', 'eng-name', d.e);
+  if (d.c) add(card, 'div', 'creds', d.c);
+  if (d.o) add(card, 'div', 'org', d.o);
+
+  // 연락처 — 전화가 연달아 두 개면 한 줄에 묶는다
+  const cs = (d.x || []).filter(c => c && c[0] && c[1]);
+  let i = 0;
+  while (i < cs.length){
+    const line = add(card, 'div', 'cline');
+    const put = (c) => {
+      add(line, 'span', 'k', c[0]);
+      const href = safeUrl(c[1], c[2]);
+      if (href){
+        const a = add(line, 'a', 'v', c[1]);
+        a.href = href;
+        if (c[2] === 'web'){ a.target = '_blank'; a.rel = 'noopener'; }
+      } else {
+        add(line, 'span', 'v', c[1]);
+      }
+    };
+    put(cs[i]);
+    const next = cs[i+1];
+    if (cs[i][2] === 'tel' && next && next[2] === 'tel'){
+      add(line, 'span', 'sep', '/');
+      put(next);
+      i += 2;
+    } else {
+      i += 1;
+    }
+  }
+
+  if (d.a) add(card, 'div', 'address', d.a);
+  if (d.g) add(phone, 'div', 'tagline', d.g);
+
+  // 버튼
+  const stack = add(phone, 'div', 'btn-stack');
+  (d.b || []).forEach(b => {
+    if (!b || !b[1]) return;
+    const href = safeUrl(b[2], 'web');
+    if (!href) return;
+    const a = add(stack, 'a', 'btn ' + (b[3] ? 'btn-primary' : 'btn-outline'),
+                  (b[0] ? b[0] + ' ' : '') + b[1]);
+    a.href = href; a.target = '_blank'; a.rel = 'noopener';
+  });
+
+  const save = add(stack, 'button', 'btn btn-primary', '연락처 저장하기');
+  save.type = 'button';
+  save.addEventListener('click', () => saveContact(d));
+
+  const hint = add(stack, 'div', 'kakao-hint',
+    '카카오톡 브라우저에서는 저장이 제한되어 있어요. 버튼을 누르면 기본 브라우저로 자동 연결됩니다.');
+  if (/KAKAOTALK/i.test(navigator.userAgent)) hint.style.display = 'block';
+
+  // 하단 이미지
+  (d.i || []).forEach(it => {
+    if (!it) return;
+    const src = safeImg(it[1]);
+    if (!src) return;
+    const sec = add(phone, 'div', 'gallery-item');
+    if (it[0]) add(sec, 'div', 'gallery-label mono', it[0]);
+    const holder = add(sec, 'div');
+    const img = add(holder, 'img');
+    img.referrerPolicy = 'no-referrer';
+    img.src = src; img.alt = it[0] || '';
+    img.onerror = onImgFail(holder, '이미지를 여기서는 불러오지 못했습니다');
+    if (it[2]) add(sec, 'p', 'gallery-desc', it[2]);
+  });
+
+  root.appendChild(phone);
+  return th;
+}
+
+/* ================== vCard ================== */
+function vEsc(s){ return String(s || '').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
+
+function saveContact(d){
+  if (/KAKAOTALK/i.test(navigator.userAgent)){
+    location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+    return;
+  }
+  const L = ['BEGIN:VCARD','VERSION:3.0'];
+  L.push('N:' + vEsc(d.n) + ';;;;');
+  L.push('FN:' + vEsc(d.n));
+  if (d.e) L.push('NICKNAME:' + vEsc(d.e));
+  if (d.o) L.push('ORG:' + vEsc(d.o));
+  if (d.t) L.push('TITLE:' + vEsc(d.t));
+
+  let telSeen = 0;
+  (d.x || []).forEach(c => {
+    if (!c || !c[1]) return;
+    if (c[2] === 'tel'){
+      L.push('TEL;TYPE=' + (telSeen++ === 0 ? 'CELL' : 'WORK,VOICE') + ':' + vEsc(c[1]));
+    } else if (c[2] === 'email'){
+      L.push('EMAIL:' + vEsc(c[1]));
+    } else if (c[2] === 'web'){
+      const u = safeUrl(c[1], 'web');
+      if (u) L.push('URL:' + u);
+    }
+  });
+
+  if (d.a) L.push('ADR;TYPE=WORK:;;' + vEsc(d.a) + ';;;;');
+  const photo = safeImg(d.p);
+  if (photo) L.push('PHOTO;VALUE=URI:' + photo);
+  if (d.c) L.push('NOTE:' + vEsc(d.c));
+  L.push('END:VCARD');
+
+  const blob = new Blob([L.join('\r\n')], { type:'text/vcard;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (d.n || 'contact') + '.vcf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ================== 부팅 ================== */
+const hash = location.hash || '';
+const m = hash.match(/[#&]c=([A-Za-z0-9\-_]+)/);
+
+if (m){
+  showCard(m[1]);
+} else {
+  startEditor();
+}
+
+async function showCard(code){
+  const page = document.getElementById('cardPage');
+  page.hidden = false;
+  let d;
+  try{
+    d = await decodeData(code);
+  }catch(e){
+    page.innerHTML = '<div class="phone" style="padding:44px 28px;text-align:center">'
+      + '<p style="font-size:15px;font-weight:700;margin-bottom:10px">명함을 열 수 없습니다</p>'
+      + '<p style="font-size:13px;color:#5B6273;line-height:1.7">링크가 중간에 잘렸을 수 있어요. 보내주신 분께 링크 전체를 다시 받아보세요.</p></div>';
+    return;
+  }
+  const th = renderCard(page, d);
+  document.body.style.background = th.page;
+  document.title = (d.n || '명함') + (d.o ? ' | ' + d.o : '');
+
+  const foot = document.createElement('div');
+  foot.className = 'made-with';
+  const a = document.createElement('a');
+  a.href = location.pathname;
+  a.textContent = '나도 온라인 명함 만들기';
+  foot.appendChild(a);
+  page.appendChild(foot);
+}
+
+/* ================== 편집기 ================== */
+function startEditor(){
+  document.getElementById('editorPage').hidden = false;
+
+  const rowsC = document.getElementById('rows-contact');
+  const rowsB = document.getElementById('rows-btn');
+  const rowsI = document.getElementById('rows-img');
+
+  function removeBtn(row){
+    const foot = document.createElement('div');
+    foot.className = 'foot';
+    const spacer = document.createElement('span');
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'mini'; del.textContent = '삭제';
+    del.addEventListener('click', () => { row.remove(); update(); });
+    foot.appendChild(spacer); foot.appendChild(del);
+    return foot;
+  }
+
+  function contactRow(label, value, type){
+    const row = document.createElement('div');
+    row.className = 'rowitem';
+    row.innerHTML =
+      '<div class="line contact-line">'
+      + '<input data-f="label" maxlength="3" placeholder="M">'
+      + '<input data-f="value" placeholder="010-0000-0000">'
+      + '<select data-f="type">'
+      +   '<option value="tel">전화</option>'
+      +   '<option value="email">이메일</option>'
+      +   '<option value="web">웹사이트</option>'
+      +   '<option value="none">표시만</option>'
+      + '</select></div>';
+    row.querySelector('[data-f="label"]').value = label || '';
+    row.querySelector('[data-f="value"]').value = value || '';
+    row.querySelector('[data-f="type"]').value = type || 'tel';
+    row.appendChild(removeBtn(row));
+    return row;
+  }
+
+  function btnRow(){
+    const row = document.createElement('div');
+    row.className = 'rowitem';
+    row.innerHTML =
+      '<div class="line btn-line">'
+      + '<input data-f="emoji" maxlength="4" placeholder="✍️">'
+      + '<input data-f="text" placeholder="브런치에서 글 보기">'
+      + '</div>'
+      + '<input data-f="url" placeholder="https://brunch.co.kr/@아이디">';
+    const foot = removeBtn(row);
+    const lab = document.createElement('label');
+    lab.innerHTML = '<input type="checkbox" data-f="primary"> 강조 (파란 버튼)';
+    foot.replaceChild(lab, foot.firstChild);
+    row.appendChild(foot);
+    return row;
+  }
+
+  function imgRow(){
+    const row = document.createElement('div');
+    row.className = 'rowitem';
+    row.innerHTML =
+      '<div class="line img-line">'
+      + '<input data-f="label" placeholder="BOOK">'
+      + '<input data-f="url" placeholder="https://example.com/cover.jpg">'
+      + '</div>'
+      + '<input data-f="desc" placeholder="설명 — 예: 이토록 멋진 코칭 (2024, 라온북)">';
+    row.appendChild(removeBtn(row));
+    return row;
+  }
+
+  // 기본 연락처 4줄
+  [['M','','tel'], ['T','','tel'], ['E','','email'], ['H','','web']]
+    .forEach(c => rowsC.appendChild(contactRow(c[0], c[1], c[2])));
+  rowsB.appendChild(btnRow());
+
+  document.querySelectorAll('[data-add]').forEach(b => {
+    b.addEventListener('click', () => {
+      const kind = b.dataset.add;
+      if (kind === 'contact') rowsC.appendChild(contactRow('', '', 'tel'));
+      if (kind === 'btn')     rowsB.appendChild(btnRow());
+      if (kind === 'img')     rowsI.appendChild(imgRow());
+      update();
+    });
+  });
+
+  // 색 선택
+  let theme = 0;
+  const sw = document.getElementById('swatches');
+  THEMES.forEach((t, idx) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'swatch';
+    b.setAttribute('aria-pressed', idx === 0 ? 'true' : 'false');
+    b.innerHTML = '<span class="dot" style="background:linear-gradient(135deg,' + t.bright + ',' + t.deep + ')"></span><span>' + t.name + '</span>';
+    b.addEventListener('click', () => {
+      theme = idx;
+      sw.querySelectorAll('.swatch').forEach((x, j) => x.setAttribute('aria-pressed', j === idx ? 'true' : 'false'));
+      update();
+    });
+    sw.appendChild(b);
+  });
+
+  // 폼 읽기
+  function readForm(){
+    const d = { k: theme };
+    document.querySelectorAll('[data-k]').forEach(inp => {
+      const v = inp.value.trim();
+      if (v) d[inp.dataset.k] = v;
+    });
+    const x = [];
+    rowsC.querySelectorAll('.rowitem').forEach(r => {
+      const label = r.querySelector('[data-f="label"]').value.trim();
+      const value = r.querySelector('[data-f="value"]').value.trim();
+      const type  = r.querySelector('[data-f="type"]').value;
+      if (label && value) x.push([label, value, type]);
+    });
+    if (x.length) d.x = x;
+
+    const b = [];
+    rowsB.querySelectorAll('.rowitem').forEach(r => {
+      const emoji = r.querySelector('[data-f="emoji"]').value.trim();
+      const text  = r.querySelector('[data-f="text"]').value.trim();
+      const url   = r.querySelector('[data-f="url"]').value.trim();
+      const pri   = r.querySelector('[data-f="primary"]').checked ? 1 : 0;
+      if (text && url) b.push([emoji, text, url, pri]);
+    });
+    if (b.length) d.b = b;
+
+    const i = [];
+    rowsI.querySelectorAll('.rowitem').forEach(r => {
+      const label = r.querySelector('[data-f="label"]').value.trim();
+      const url   = r.querySelector('[data-f="url"]').value.trim();
+      const desc  = r.querySelector('[data-f="desc"]').value.trim();
+      if (url) i.push([label, url, desc]);
+    });
+    if (i.length) d.i = i;
+
+    return d;
+  }
+
+  // 이미지 주소 확인
+  function checkImage(input){
+    const box = document.getElementById('chk-' + input.id);
+    if (!box) return;
+    const v = input.value.trim();
+    if (!v){ box.textContent = ''; box.className = 'imgcheck'; return; }
+    if (/^http:\/\//i.test(v)){
+      box.textContent = 'https 주소가 필요합니다. 앞부분을 https 로 바꿔보세요.';
+      box.className = 'imgcheck bad';
+      return;
+    }
+    if (!/^https:\/\//i.test(v)){
+      box.textContent = '이미지 주소는 https:// 로 시작해야 합니다.';
+      box.className = 'imgcheck bad';
+      return;
+    }
+    box.textContent = '불러오는 중…';
+    box.className = 'imgcheck warn';
+    const probe = new Image();
+    probe.referrerPolicy = 'no-referrer';
+    probe.onload = () => {
+      box.textContent = '불러왔습니다 · ' + probe.naturalWidth + '×' + probe.naturalHeight;
+      box.className = 'imgcheck ok';
+    };
+    probe.onerror = () => {
+      box.textContent = '여기서는 못 불러왔습니다. 주소는 그대로 두셔도 되니, 링크를 만든 뒤 실제 명함에서 사진이 나오는지 확인해 보세요.';
+      box.className = 'imgcheck warn';
+    };
+    probe.src = v;
+  }
+
+  // 갱신
+  const preview = document.getElementById('preview');
+  const makeBtn = document.getElementById('makeBtn');
+  const linkbox = document.getElementById('linkbox');
+  let timer = null, imgTimer = null;
+
+  function update(){
+    const d = readForm();
+    renderCard(preview, d, true);
+    makeBtn.disabled = !d.n;
+    linkbox.classList.remove('show');
+  }
+
+  document.getElementById('editorPage').addEventListener('input', (ev) => {
+    clearTimeout(timer);
+    timer = setTimeout(update, 160);
+    if (ev.target.dataset && ev.target.dataset.img){
+      clearTimeout(imgTimer);
+      imgTimer = setTimeout(() => checkImage(ev.target), 700);
+    }
+  });
+  document.getElementById('editorPage').addEventListener('change', () => update());
+
+  // 링크 만들기
+  makeBtn.addEventListener('click', async () => {
+    const d = readForm();
+    const code = await encodeData(d);
+    const url = location.origin + location.pathname + '#c=' + code;
+
+    document.getElementById('linkOut').value = url;
+    document.getElementById('openLink').href = url;
+    linkbox.classList.add('show');
+
+    const meter = document.getElementById('meter');
+    const n = url.length;
+    meter.classList.toggle('over', n > 1500);
+    meter.innerHTML = n > 1500
+      ? '링크 길이 <b>' + n + '자</b> · 조금 깁니다. 버튼이나 이미지를 줄이면 짧아집니다.'
+      : '링크 길이 <b>' + n + '자</b> · 카카오톡, 문자, QR 모두 문제없습니다.';
+
+    const qr = document.getElementById('qr');
+    qr.innerHTML = '';
+    if (window.QRCode){
+      try{
+        new QRCode(qr, { text:url, width:170, height:170,
+          colorDark:THEMES[d.k||0].deep, colorLight:'#ffffff',
+          correctLevel: QRCode.CorrectLevel.L });
+      }catch(e){ qr.innerHTML = ''; }
+    }
+    linkbox.scrollIntoView({ block:'nearest' });
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('copyBtn');
+    const val = document.getElementById('linkOut').value;
+    try{
+      await navigator.clipboard.writeText(val);
+    }catch(e){
+      const el = document.getElementById('linkOut');
+      el.select(); document.execCommand('copy');
+    }
+    btn.textContent = '복사됨';
+    setTimeout(() => { btn.textContent = '복사'; }, 1600);
+  });
+
+  document.getElementById('shareLink').addEventListener('click', (ev) => {
+    ev.preventDefault();
+    const url = document.getElementById('linkOut').value;
+    if (navigator.share) navigator.share({ title:'온라인 명함', url });
+    else document.getElementById('copyBtn').click();
+  });
+
+  // 불러오기
+  document.getElementById('loadBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('loadMsg');
+    const raw = document.getElementById('f-load').value.trim();
+    const mm = raw.match(/[#&]c=([A-Za-z0-9\-_]+)/) || raw.match(/^([01][A-Za-z0-9\-_]+)$/);
+    if (!mm){
+      msg.textContent = '명함 링크가 아닙니다. #c= 가 들어간 주소 전체를 붙여넣어 주세요.';
+      msg.className = 'imgcheck bad';
+      return;
+    }
+    let d;
+    try{ d = await decodeData(mm[1]); }
+    catch(e){
+      msg.textContent = '링크를 읽지 못했습니다. 중간에 잘리지 않았는지 확인해 주세요.';
+      msg.className = 'imgcheck bad';
+      return;
+    }
+    fillForm(d);
+    msg.textContent = '불러왔습니다. 고친 뒤 링크를 다시 만드세요.';
+    msg.className = 'imgcheck ok';
+  });
+
+  function fillForm(d){
+    document.querySelectorAll('[data-k]').forEach(inp => { inp.value = d[inp.dataset.k] || ''; });
+    rowsC.innerHTML = ''; rowsB.innerHTML = ''; rowsI.innerHTML = '';
+    (d.x || []).forEach(c => rowsC.appendChild(contactRow(c[0], c[1], c[2])));
+    if (!(d.x || []).length) rowsC.appendChild(contactRow('M', '', 'tel'));
+    (d.b || []).forEach(b => {
+      const r = btnRow();
+      r.querySelector('[data-f="emoji"]').value = b[0] || '';
+      r.querySelector('[data-f="text"]').value  = b[1] || '';
+      r.querySelector('[data-f="url"]').value   = b[2] || '';
+      r.querySelector('[data-f="primary"]').checked = !!b[3];
+      rowsB.appendChild(r);
+    });
+    (d.i || []).forEach(it => {
+      const r = imgRow();
+      r.querySelector('[data-f="label"]').value = it[0] || '';
+      r.querySelector('[data-f="url"]').value   = it[1] || '';
+      r.querySelector('[data-f="desc"]').value  = it[2] || '';
+      rowsI.appendChild(r);
+    });
+    theme = d.k || 0;
+    sw.querySelectorAll('.swatch').forEach((x, j) => x.setAttribute('aria-pressed', j === theme ? 'true' : 'false'));
+    ['f-p','f-l'].forEach(id => checkImage(document.getElementById(id)));
+    update();
+  }
+
+  update();
+}
+</script>
+
+</body>
+</html>
